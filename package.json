@@ -6,6 +6,7 @@
   "types": "index.d.ts",
   "author": "Orkun ÇAKILKAYA <orkuncakilkaya@gmail.com>",
   "license": "MIT",
+  "private": false,
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only examples/server.ts",
     "clean-lib": "node_modules/.bin/rimraf ./dist",
