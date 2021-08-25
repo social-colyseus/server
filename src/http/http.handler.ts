@@ -1,6 +1,6 @@
 import express from 'express';
 import AuthModule from '../services/auth/module/auth.module';
-import {SocialColyseusApp} from '../index';
+import {SocialColyseusApp} from '../../index';
 import jwt from 'express-jwt';
 import UserModule from '../services/user/module/user.module';
 import bodyParser from 'body-parser';

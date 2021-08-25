@@ -1,4 +1,4 @@
-import {SocialColyseusApp} from '../../../index';
+import {SocialColyseusApp} from '../../../../index';
 import express from 'express';
 import getUserMiddleware from '../../../http/middleware/get.user.middleware';
 import FriendModule from '../../friendship/module/friendship.module';

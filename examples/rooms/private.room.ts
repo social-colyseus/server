@@ -1,6 +1,6 @@
 import {Client, Room} from 'colyseus';
 import authenticate from '../../src/services/auth/authenticate';
-import {SocialColyseusApp} from '../../src';
+import {SocialColyseusApp} from '../../index';
 
 export class PrivateRoom extends Room {
     protected app: SocialColyseusApp;

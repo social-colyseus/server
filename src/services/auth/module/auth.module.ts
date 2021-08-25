@@ -1,5 +1,5 @@
 import express from 'express';
-import {SocialColyseusApp} from '../../../index';
+import {SocialColyseusApp} from '../../../../index';
 import {RegisterModel, RegisterValidator} from '../models/register.model';
 import {validationResult} from 'express-validator';
 import bcrypt from 'bcrypt';

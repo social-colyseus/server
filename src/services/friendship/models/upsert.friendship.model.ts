@@ -1,4 +1,4 @@
-import {SocialColyseusApp} from '../../../index';
+import {SocialColyseusApp} from '../../../../index';
 import {body, query} from 'express-validator';
 import {User} from '../../user/schema/user.schema';
 

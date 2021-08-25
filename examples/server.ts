@@ -3,7 +3,7 @@ import {createServer} from 'http';
 import {Server} from 'colyseus';
 import {WebSocketTransport} from '@colyseus/ws-transport';
 import * as dotenv from 'dotenv';
-import {SocialColyseusApp} from '../src';
+import {SocialColyseusApp} from '../index';
 import cors from 'cors';
 import {PrivateRoom} from './rooms/private.room';
 

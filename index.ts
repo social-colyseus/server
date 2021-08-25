@@ -1,14 +1,14 @@
 import {Mongoose} from 'mongoose';
 import mongoose from 'mongoose';
-import {HttpHandler} from './http/http.handler';
+import {HttpHandler} from './src/http/http.handler';
 import {Room, Server} from 'colyseus';
-import {SocialRoom} from './rooms/social.room';
+import {SocialRoom} from './src/rooms/social.room';
 import {matchMaker} from 'colyseus';
-import {UserService} from './services/user/user.service';
-import {AuthService} from './services/auth/auth.service';
-import {FriendshipService} from './services/friendship/friendship.service';
+import {UserService} from './src/services/user/user.service';
+import {AuthService} from './src/services/auth/auth.service';
+import {FriendshipService} from './src/services/friendship/friendship.service';
 import {Type} from '@colyseus/core/build/types';
-import {InvitationService} from './services/invitation/invitation.service';
+import {InvitationService} from './src/services/invitation/invitation.service';
 
 export interface DatabaseOptions {
     host: string;
