@@ -12,6 +12,21 @@ export class UserService {
 
     public async findUserById(id: string) {
         const user = await this.model.findById(id);
+        if (!user) return null;
+
+        return {...user.toObject(), password: undefined};
+    }
+
+    public async findByUserName(userName: string) {
+        const user = await this.model.findOne({userName});
+        if (!user) return null;
+
+        return {...user.toObject(), password: undefined};
+    }
+
+    public async findByEmail(email: string) {
+        const user = await this.model.findOne({email});
+        if (!user) return null;
 
         return {...user.toObject(), password: undefined};
     }

@@ -12,7 +12,7 @@ export const RegisterValidator = (app: SocialColyseusApp) => [
         .exists().bail()
         .isEmail().bail()
         .custom(async (input) => {
-            const user = await app.userModel.findOne({email: input});
+            const user = await app.userService.findByEmail(input);
             if (user !== null) {
                 return Promise.reject();
             }
@@ -21,7 +21,7 @@ export const RegisterValidator = (app: SocialColyseusApp) => [
         .exists().bail()
         .isLength({min: 3, max: 32}).bail()
         .custom(async (input) => {
-            const user = await app.userModel.findOne({userName: input});
+            const user = await app.userService.findByUserName(input);
             if (user !== null) {
                 return Promise.reject();
             }
