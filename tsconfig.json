@@ -9,10 +9,11 @@
     "declaration": true,
     "noImplicitAny": false,
     "experimentalDecorators": true,
-    "sourceMap": false,
+    "sourceMap": true,
     "esModuleInterop": true
   },
-  "include": [
-    "./src/**/*.ts"
+  "exclude": [
+    "node_modules",
+    "dist"
   ]
 }
