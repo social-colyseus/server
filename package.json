@@ -1,0 +1,42 @@
+{
+  "name": "social-colyseus",
+  "version": "0.0.1",
+  "description": "Social Colyseus - A Library of social actions & user persistence library for Colyseus",
+  "main": "dist/index.js",
+  "author": "Orkun ÇAKILKAYA <orkuncakilkaya@gmail.com>",
+  "license": "MIT",
+  "scripts": {
+    "dev": "ts-node-dev --respawn --transpile-only examples/server.ts",
+    "start": "node index.js",
+    "build": "tsc --build",
+    "prepublish": "yarn build",
+    "postbuild": "copyfiles package.json dist"
+  },
+  "engines": {
+    "node": ">=14.17.5"
+  },
+  "dependencies": {
+    "bcrypt": "^5.0.1",
+    "body-parser": "^1.19.0",
+    "colyseus": "^0.14.0",
+    "cors": "^2.8.5",
+    "express": "^4.16.4",
+    "express-jwt": "^6.1.0",
+    "express-validator": "^6.12.1",
+    "http": "^0.0.1-security",
+    "jsonwebtoken": "^8.5.1",
+    "mongoose": "^5.13.7"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^5.0.0",
+    "@types/cors": "^2.8.12",
+    "@types/express": "^4.16.4",
+    "@types/express-jwt": "^6.0.2",
+    "@types/jsonwebtoken": "^8.5.5",
+    "copyfiles": "^2.4.1",
+    "dotenv": "^10.0.0",
+    "ts-node": "^8.1.0",
+    "ts-node-dev": "^1.0.0-pre.63",
+    "typescript": "^3.4.5"
+  }
+}

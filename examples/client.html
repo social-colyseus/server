@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Client Example</title>
+    <script src="//unpkg.com/jquery.min.js"></script>
+    <script src="//unpkg.com/colyseus.js"></script>
+</head>
+<body>
+
+<form id="loginForm" onsubmit="loginFormSubmit(event)">
+    <label>
+        <span>Username</span>
+        <input type="text" id="loginFormUsername" placeholder="userName"/>
+    </label>
+    <label>
+        <span>Password</span>
+        <input type="password" id="loginFormPassword" placeholder="password"/>
+    </label>
+    <button type="submit">
+        Submit
+    </button>
+</form>
+
+<div id="friends-list">
+
+</div>
+
+<div id="create-private-room-holder" style="display: none">
+    <button type="button" id="create-private-room">
+        Create Private Room
+    </button>
+</div>
+
+<script type="application/javascript">
+    const client = new Colyseus.Client('ws://localhost:5567');
+    let authToken;
+    let socialRoom;
+
+    const onLogin = (token) => {
+        authToken = token;
+        client.join('social', {token}).then(room => {
+            socialRoom = room;
+            $('#create-private-room-holder').fadeIn();
+            room.onMessage('friends', (friends) => {
+                $('#friends-list').html(friends.map(friend => `
+                    <div class="friend-item">
+                        <strong>Name</strong>
+                        <span>${friend.userName}</span>
+                        <button type="button" class="invite-friend" style="display: none" data-id="${friend._id}">
+                            Invite
+                        </button>
+                    </div>
+                `).join('\n'));
+            });
+            room.onMessage('me', (me) => {
+                console.log({me});
+            });
+
+            room.onMessage('infoMessage', infoMessage => console.info({infoMessage}));
+            room.onMessage('errorMessage', errorMessage => console.error({errorMessage}));
+            room.onMessage('invited', invited => console.log({invited}));
+        });
+    };
+
+    $('#create-private-room').on('click', () => {
+        $('#create-private-room-holder').fadeOut();
+        client.create('privateRoom', {token: authToken}).then(room => {
+            console.log({room});
+            $('.invite-friend').fadeIn().on('click', (event) => {
+                const friendId = $(event.target).data('id');
+                socialRoom.send('inviteFriend', {invitedId: friendId, roomId: room.id});
+            });
+        });
+    });
+
+    const login = (userName, password) => {
+        return fetch('http://localhost:5567/auth/login', {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                userName,
+                password,
+            }),
+        }).then(res => res.json()).then(res => {
+            onLogin(res.data.token);
+        });
+    };
+
+    const loginFormSubmit = (event) => {
+        event.preventDefault();
+        const userName = $('#loginFormUsername').val();
+        const password = $('#loginFormPassword').val();
+        login(userName, password);
+        $('#loginForm').fadeOut();
+    };
+</script>
+</body>
+</html>
