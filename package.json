@@ -10,7 +10,7 @@
     "dev": "ts-node-dev --respawn --transpile-only examples/server.ts",
     "clean-lib": "node_modules/.bin/rimraf ./dist",
     "copypackage": "copyfiles package.json dist",
-    "copyreadme": "copyfiles readme.md dist",
+    "copyreadme": "copyfiles README.md dist",
     "copyall": "yarn run copypackage && yarn run copyreadme",
     "removescripts": "cd dist && node ../node_modules/clean-package/bin/clean-package.js --remove scripts",
     "removedev": "cd dist && node ../node_modules/clean-package/bin/clean-package.js --remove devDependencies",
