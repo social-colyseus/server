@@ -10,8 +10,7 @@
     "dev": "ts-node-dev --respawn --transpile-only examples/server.ts",
     "start": "node index.js",
     "build": "tsc --build",
-    "prepublish": "yarn build",
-    "postbuild": "copyfiles package.json dist"
+    "prepublish": "yarn build"
   },
   "engines": {
     "node": ">=14.17.5"
