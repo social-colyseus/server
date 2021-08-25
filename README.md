@@ -1,7 +1,7 @@
 # SocialColyseus - Server
 
-SocialColyseus - Server is an extensions for Colyseus. This package adds Authentication, Friendship, Invitation System
-and more to Colyseus servers. SocialColyseus uses MongoDB for database. It also provides Rest API.
+SocialColyseus - Server is an extension for Colyseus. This package adds Authentication, Friendship, Invitation System
+and more features to Colyseus servers. SocialColyseus uses MongoDB for database. It also provides Rest API.
 
 ## How to use?
 
