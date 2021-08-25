@@ -2,15 +2,22 @@
   "name": "social-colyseus",
   "version": "0.0.1",
   "description": "Social Colyseus - A Library of social actions & user persistence library for Colyseus",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "index.js",
+  "types": "index.d.ts",
   "author": "Orkun ÇAKILKAYA <orkuncakilkaya@gmail.com>",
   "license": "MIT",
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only examples/server.ts",
-    "start": "node index.js",
-    "build": "tsc --build",
-    "prepublish": "yarn build"
+    "clean-lib": "node_modules/.bin/rimraf ./dist",
+    "copypackage": "copyfiles package.json dist",
+    "copyreadme": "copyfiles readme.md dist",
+    "copyall": "yarn run copypackage && yarn run copyreadme",
+    "removescripts": "cd dist && node ../node_modules/clean-package/bin/clean-package.js --remove scripts",
+    "removedev": "cd dist && node ../node_modules/clean-package/bin/clean-package.js --remove devDependencies",
+    "removefiles": "cd dist && node ../node_modules/clean-package/bin/clean-package.js --remove files",
+    "clearpackage": "yarn run removescripts && yarn run removedev && yarn run removefiles",
+    "build": "yarn run clean-lib && tsc --build && yarn run copyall && yarn run clearpackage && node_modules/.bin/rimraf ./dist/package.json.backup",
+    "prepare": "yarn build"
   },
   "engines": {
     "node": ">=14.17.5"
@@ -33,10 +40,15 @@
     "@types/express": "^4.16.4",
     "@types/express-jwt": "^6.0.2",
     "@types/jsonwebtoken": "^8.5.5",
+    "clean-package": "^1.0.1",
     "copyfiles": "^2.4.1",
     "dotenv": "^10.0.0",
+    "rimraf": "^3.0.2",
     "ts-node": "^8.1.0",
     "ts-node-dev": "^1.0.0-pre.63",
     "typescript": "^3.4.5"
-  }
+  },
+  "files": [
+    "/dist"
+  ]
 }
