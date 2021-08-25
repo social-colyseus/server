@@ -11,6 +11,7 @@ First copy .env.template to .env file and fill the necessary fields.
 
 ```typescript
 import * as dotenv from 'dotenv';
+
 dotenv.config();
 ```
 
@@ -42,6 +43,7 @@ const gameServer = new Server({
 ```
 
 ### Import SocialColyseus App
+
 ```typescript
 import {SocialColyseusApp} from '../index';
 
@@ -95,10 +97,10 @@ gameServer.listen(5567, '0.0.0.0').finally();
 
 ## Roadmap
 
--[ ] Room Invitation
--[ ] Leaderboard
--[ ] Clans
--[ ] Parties
+- [ ] Room Invitation
+- [ ] Leaderboard
+- [ ] Clans
+- [ ] Parties
 
 ## Note
 
