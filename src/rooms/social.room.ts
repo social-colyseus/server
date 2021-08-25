@@ -19,8 +19,8 @@ export class SocialRoom extends Room {
         this.app = options.app;
         this.events = new SocialRoomEvents(this.app);
         this.events.getClients = () => this.clients;
-        this.onMessage('getMe', (client) => this.events.emitter.emit('getMe', [client]));
-        this.onMessage('listFriends', (client) => this.events.emitter.emit('listFriends', [client]));
+        this.onMessage('getMe', (client) => this.events.emitter.emit('getMe', client));
+        this.onMessage('listFriends', (client) => this.events.emitter.emit('listFriends', client));
     }
 
     onJoin(client: Client, options?: any, auth?: any): void | Promise<any> {
