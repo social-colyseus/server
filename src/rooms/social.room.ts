@@ -19,8 +19,18 @@ export class SocialRoom extends Room {
         this.app = options.app;
         this.events = new SocialRoomEvents(this.app);
         this.events.getClients = () => this.clients;
+
         this.onMessage('getMe', (client) => this.events.emitter.emit('getMe', client));
+        this.onMessage('addFriend', (client, message) => this.events.emitter.emit('addFriend', client, message.friend_id));
+        this.onMessage('approveFriendship', (client, message) => this.events.emitter.emit('approveFriendship', client, message.friend_id));
+        this.onMessage('rejectFriendship', (client, message) => this.events.emitter.emit('rejectFriendship', client, message.friend_id));
+        this.onMessage('removeFriend', (client, message) => this.events.emitter.emit('removeFriend', client, message.friend_id));
         this.onMessage('listFriends', (client) => this.events.emitter.emit('listFriends', client));
+        this.onMessage('listOnlineFriends', (client) => this.events.emitter.emit('listOnlineFriends', client));
+        this.onMessage('inviteFriendToRoom', (client, message) => this.events.emitter.emit('inviteFriendToRoom', client, message.friend_id, message.room_id));
+        this.onMessage('acceptInvitation', (client, message) => this.events.emitter.emit('acceptInvitation', client, message.invitation_id));
+        this.onMessage('rejectInvitation', (client, message) => this.events.emitter.emit('rejectInvitation', client, message.invitation_id));
+
     }
 
     onJoin(client: Client, options?: any, auth?: any): void | Promise<any> {
@@ -34,6 +44,9 @@ export class SocialRoom extends Room {
     async onAuth(client: Client, options: { token: string }): Promise<User> {
         const user = await authenticate(this.app, options);
         client.userData = user;
+        await this.events.emitter.emit('getMe', client);
+        await this.events.emitter.emit('listFriends', client);
+        await this.events.emitter.emit('listOnlineFriends', client);
         return user;
     }
 }
