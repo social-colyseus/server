@@ -1,5 +1,3 @@
-export {DatabaseOptions, SocialColyseusApp, AppOptions} from './src/app';
-
 export * from './src/events/social.room.events';
 
 export * from './src/http/http.handler';
