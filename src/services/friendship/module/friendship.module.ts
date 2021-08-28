@@ -1,4 +1,4 @@
-import {SocialColyseusApp} from '../../../../index';
+import {SocialColyseusApp} from '../../../app';
 import express from 'express';
 import {User} from '../../user/schema/user.schema';
 import UpsertFriendshipModel, {

@@ -1,81 +1,35 @@
-import {Mongoose} from 'mongoose';
-import mongoose from 'mongoose';
-import {HttpHandler} from './src/http/http.handler';
-import {Room, Server} from 'colyseus';
-import {SocialRoom} from './src/rooms/social.room';
-import {matchMaker} from 'colyseus';
-import {UserService} from './src/services/user/user.service';
-import {AuthService} from './src/services/auth/auth.service';
-import {FriendshipService} from './src/services/friendship/friendship.service';
-import {Type} from '@colyseus/core/build/types';
-import {InvitationService} from './src/services/invitation/invitation.service';
+export {DatabaseOptions, SocialColyseusApp, AppOptions} from './src/app';
 
-export interface DatabaseOptions {
-    host: string;
-    port: string;
-    user: string;
-    pass: string;
-    name: string;
-}
+export * from './src/events/social.room.events';
 
-export interface AppOptions {
-    database: DatabaseOptions;
-}
+export * from './src/http/http.handler';
+export * from './src/http/middleware/get.user.middleware';
 
-export class SocialColyseusApp {
-    public userService: UserService;
-    public authService: AuthService;
-    public friendshipService: FriendshipService;
-    public invitationService: InvitationService;
+export * from './src/rooms/social.room';
 
-    protected db: Mongoose;
+export * from './src/services/auth/auth.service';
+export * from './src/services/auth/models/create.auth.model';
+export * from './src/services/auth/models/login.model';
+export * from './src/services/auth/models/register.model';
+export * from './src/services/auth/module/auth.module';
+export * from './src/services/auth/schema/auth.schema';
+export * from './src/services/auth/authenticate';
 
-    constructor(
-        public server: Server,
-        protected options: AppOptions,
-    ) {
-        this.connectDatabase().then(database => {
-            this.db = database;
-            this.prepareServices();
-            this.server.define('social', SocialRoom);
-            matchMaker.createRoom('social', {
-                secret: process.env.APP_SECRET,
-                app: this,
-            }).finally();
-        }).catch(err => console.error({err}));
-    }
+export * from './src/services/friendship/friendship.service';
+export * from './src/services/friendship/models/approve.friendship.model';
+export * from './src/services/friendship/models/create.friendship.model';
+export * from './src/services/friendship/models/delete.friendship.model';
+export * from './src/services/friendship/models/upsert.friendship.model';
+export * from './src/services/friendship/module/friendship.module';
+export * from './src/services/friendship/schema/friendship.schema';
 
-    public defineRoom<T extends Type<Room>>(name: string, handler: T) {
-        return this.server.define(name, handler, {
-            app: this,
-        });
-    }
+export * from './src/services/invitation/invitation.service';
+export * from './src/services/invitation/models/create.invitation.model';
+export * from './src/services/invitation/models/delete.invitation.model';
+export * from './src/services/invitation/models/delete.invitation.model';
+export * from './src/services/invitation/schema/invitation.schema';
 
-    public httpHandler() {
-        return HttpHandler(this);
-    }
-
-    protected connectDatabase() {
-        const {host, port, name, user, pass} = this.options.database;
-        return new Promise<Mongoose>((resolve, reject) => {
-            const connectionString = `mongodb://${host}:${port}/${name}`;
-            mongoose.connect(connectionString, {
-                user,
-                pass,
-                useNewUrlParser: true,
-                useUnifiedTopology: true,
-            }).then(database => {
-                resolve(database);
-            }).catch(err => {
-                reject(err);
-            });
-        });
-    }
-
-    protected prepareServices() {
-        this.userService = new UserService(this.db);
-        this.authService = new AuthService(this.db);
-        this.friendshipService = new FriendshipService(this.db);
-        this.invitationService = new InvitationService(this.db);
-    }
-}
+export * from './src/services/user/user.service';
+export * from './src/services/user/models/user.create.model';
+export * from './src/services/user/module/user.module';
+export * from './src/services/user/schema/user.schema';

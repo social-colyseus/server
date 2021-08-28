@@ -1,5 +1,5 @@
 import {body} from 'express-validator';
-import {SocialColyseusApp} from '../../../../index';
+import {SocialColyseusApp} from '../../../app';
 
 export type RegisterModel = {
     userName: string;

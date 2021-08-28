@@ -1,6 +1,6 @@
 import {EventEmitter} from 'events';
 import {Client} from 'colyseus';
-import {SocialColyseusApp} from '../../index';
+import {SocialColyseusApp} from '../app';
 
 export class SocialRoomEvents {
     public getClients: () => Client[] = () => [];

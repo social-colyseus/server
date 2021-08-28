@@ -1,7 +1,7 @@
 import {User} from '../user/schema/user.schema';
 import jsonwebtoken from 'jsonwebtoken';
 import {Auth} from './schema/auth.schema';
-import {SocialColyseusApp} from '../../../index';
+import {SocialColyseusApp} from '../../app';
 
 const authenticate = async (app?: SocialColyseusApp, options?: { token: string }): Promise<User> => {
     if (!app) {

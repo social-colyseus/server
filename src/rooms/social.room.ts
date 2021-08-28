@@ -1,5 +1,5 @@
 import {Room, Client} from 'colyseus';
-import {SocialColyseusApp} from '../../index';
+import {SocialColyseusApp} from '../app';
 import {User} from '../services/user/schema/user.schema';
 import authenticate from '../services/auth/authenticate';
 import {SocialRoomEvents} from '../events/social.room.events';

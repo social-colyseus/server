@@ -1,4 +1,4 @@
-import {SocialColyseusApp} from '../index';
+import {SocialColyseusApp} from '../src/app';
 import {PrivateRoom} from './rooms/private.room';
 import {Server} from 'colyseus';
 import {WebSocketTransport} from '@colyseus/ws-transport';

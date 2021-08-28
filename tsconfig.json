@@ -1,8 +1,7 @@
 {
   "compilerOptions": {
     "outDir": "dist",
-    "outFile": "dist/index.js",
-    "module": "commonjs",
+    "module": "umd",
     "lib": [
       "es6"
     ],
