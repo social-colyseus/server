@@ -1,37 +1,39 @@
 import {EventEmitter} from 'events';
 import {Client} from 'colyseus';
 import {SocialColyseusApp} from '../../index';
-import {User} from '../services/user/schema/user.schema';
 
 export class SocialRoomEvents {
     public getClients: () => Client[] = () => [];
     public readonly emitter = new EventEmitter();
+    protected readonly app: SocialColyseusApp;
 
-    constructor(protected app: SocialColyseusApp) {
-        this.emitter.addListener('getMe', this.getMe);
+    constructor(app: SocialColyseusApp) {
+        this.app = app;
+        this.emitter.addListener('getMe', (client: Client) => this.getMe(client));
 
-        this.emitter.addListener('onPlayerJoin', this.onPlayerJoin);
-        this.emitter.addListener('onPlayerLeave', this.onPlayerLeave);
+        this.emitter.addListener('onPlayerJoin', (client: Client) => this.onPlayerJoin(client));
+        this.emitter.addListener('onPlayerLeave', (client: Client) => this.onPlayerLeave(client));
 
-        this.emitter.addListener('listOnlineFriends', this.listOnlineFriends);
+        this.emitter.addListener('listOnlineFriends', (client: Client) => this.listOnlineFriends(client));
 
-        this.emitter.addListener('addFriend', this.addFriend);
+        this.emitter.addListener('addFriend', (client: Client, userName: string) => this.addFriend(client, userName));
 
-        this.emitter.addListener('approveFriendship', this.approveFriendship);
-        this.emitter.addListener('rejectFriendship', this.rejectFriendship);
+        this.emitter.addListener('approveFriendship', (client: Client, userName: string) => this.approveFriendship(client, userName));
+        this.emitter.addListener('rejectFriendship', (client: Client, userName: string) => this.rejectFriendship(client, userName));
 
-        this.emitter.addListener('removeFriend', this.removeFriend);
+        this.emitter.addListener('removeFriend', (client: Client, userName: string) => this.removeFriend(client, userName));
 
-        this.emitter.addListener('listFriends', this.listFriends);
-        this.emitter.addListener('listFriendshipRequests', this.listFriendshipRequests);
+        this.emitter.addListener('listFriends', (client: Client) => this.listFriends(client));
+        this.emitter.addListener('listFriendshipRequests', (client: Client) => this.listFriendshipRequests(client));
 
-        this.emitter.addListener('inviteFriendToRoom', this.inviteFriendToRoom);
-        this.emitter.addListener('acceptInvitation', this.invitationAccepted);
-        this.emitter.addListener('rejectInvitation', this.invitationRejected);
+        this.emitter.addListener('listInvitations', (client: Client) => this.listInvitations(client));
+        this.emitter.addListener('inviteFriendToRoom', (client: Client, userName: string, room_id: string) => this.inviteFriendToRoom(client, userName, room_id));
+        this.emitter.addListener('acceptInvitation', (client: Client, invitation_id: string) => this.acceptInvitation(client, invitation_id));
+        this.emitter.addListener('rejectInvitation', (client: Client, invitation_id: string) => this.rejectInvitation(client, invitation_id));
     }
 
     protected async getMe(client: Client) {
-        client.send('me', {...client.userData.toObject(), password: undefined});
+        client.send('me', {...client.userData, password: undefined});
     }
 
     protected async onPlayerJoin(client: Client) {
@@ -40,10 +42,9 @@ export class SocialRoomEvents {
             const onlineFriends = this.getClients().filter(t => friendsIdList.includes(t.userData._id.toString()));
 
             for (const friend of onlineFriends) {
-                friend.send('onFriendJoined', {id: client.userData._id});
+                friend.send('onFriendOnline', {userName: client.userData.userName});
             }
         } catch (_) {
-
         }
     }
 
@@ -53,7 +54,7 @@ export class SocialRoomEvents {
             const onlineFriends = this.getClients().filter(t => friendsIdList.includes(t.userData._id.toString()));
 
             for (const friend of onlineFriends) {
-                friend.send('onFriendLeave', {id: client.userData._id.toString()});
+                friend.send('onFriendOffline', {userName: client.userData.userName});
             }
         } catch (_) {
 
@@ -63,64 +64,85 @@ export class SocialRoomEvents {
     protected async listOnlineFriends(client: Client) {
         try {
             const friendsIdList = await this.app.friendshipService.getFriendsIdListOfUser(client.userData._id.toString());
-            const onlineFriends: User[] = this.getClients().filter(t => friendsIdList.includes(t.userData._id.toString())).map(client => ({
-                ...client.userData, password: undefined,
-            }));
-            client.send('onOnlineFriends', {friends: onlineFriends});
+            const onlineClientsList = this.getClients().filter(client => friendsIdList.includes(client.userData._id.toString()));
+            client.send('onOnlineFriends', {friends: onlineClientsList.map(client => client.userData)});
         } catch (_) {
             client.send('failure', {eventType: 'listOnlineFriends'});
         }
     }
 
-    protected async addFriend(client: Client, friend_id: string) {
+    protected async addFriend(client: Client, userName: string) {
         try {
+            const user = await this.app.userService.findByUserName(userName);
+            if (!user) {
+                throw new Error('no_user');
+            }
             await this.app.friendshipService.createFriendship({
                 sender: client.userData._id.toString(),
-                receiver: friend_id,
+                receiver: user._id.toString(),
             });
-            client.send('onFriendshipRequestSent', {receiver: friend_id});
+            const friendClient = this.getClients().find(t => t.userData._id.toString() === user._id.toString());
+            this.emitter.emit('listFriendshipRequests', friendClient);
+            client.send('onFriendshipRequestSent', {receiver: userName});
         } catch (_) {
             client.send('failure', {eventType: 'addFriend'});
         }
     }
 
-    protected async approveFriendship(client: Client, friend_id: string) {
+    protected async approveFriendship(client: Client, userName: string) {
         try {
-            await this.app.friendshipService.approveFriendship({
-                receiver: client.userData._id.toString(),
-                sender: friend_id,
-            });
-            const friend = this.getClients().find(t => t.userData._id.toString() === friend_id);
-            if (friend) {
-                friend.send('onFriendshipRequestAccepted', {friend_id});
+            const user = await this.app.userService.findByUserName(userName);
+            if (!user) {
+                throw new Error('no_user');
             }
+            await this.app.friendshipService.approveFriendship({
+                sender: user._id.toString(),
+                receiver: client.userData._id.toString(),
+            });
+            const friend = this.getClients().find(t => t.userData._id.toString() === user._id.toString());
+            if (friend) {
+                this.emitter.emit('listFriends', friend);
+                this.emitter.emit('listOnlineFriends', friend);
+            }
+            this.emitter.emit('listFriends', client);
+            this.emitter.emit('listFriendshipRequests', client);
+            this.emitter.emit('listOnlineFriends', client);
         } catch (_) {
             client.send('failure', {eventType: 'approveFriendship'});
         }
     }
 
-    protected async rejectFriendship(client: Client, friend_id: string) {
+    protected async rejectFriendship(client: Client, userName: string) {
         try {
+            const user = await this.app.userService.findByUserName(userName);
+            if (!user) {
+                throw new Error('no_user');
+            }
             await this.app.friendshipService.deleteFriendship({
                 receiver: client.userData._id.toString(),
-                sender: friend_id,
+                sender: user._id.toString(),
             });
-            const friend = this.getClients().find(t => t.userData._id.toString() === friend_id);
-            if (friend) {
-                friend.send('onFriendshipRequestRejected', {friend_id});
-            }
+            this.emitter.emit('listFriendshipRequests', client);
         } catch (_) {
             client.send('failure', {eventType: 'rejectFriendship'});
         }
     }
 
-    protected async removeFriend(client: Client, friend_id: string) {
+    protected async removeFriend(client: Client, userName: string) {
         try {
+            const user = await this.app.userService.findByUserName(userName);
+            if (!user) {
+                throw new Error('no_user');
+            }
             await this.app.friendshipService.deleteFriendship({
                 receiver: client.userData._id.toString(),
-                sender: friend_id,
+                sender: user._id.toString(),
             });
-            client.send('onFriendshipRemoved', {friend_id});
+            const friend = this.getClients().find(t => t.userData.userName === userName);
+            if (friend) {
+                this.emitter.emit('listFriends', friend);
+            }
+            this.emitter.emit('listFriends', client);
         } catch (_) {
             client.send('failure', {eventType: 'removeFriend'});
         }
@@ -132,6 +154,7 @@ export class SocialRoomEvents {
             const userList = await this.app.userService.findUsersByIdList(friendsIdList);
             client.send('onListFriends', {friends: userList});
         } catch (_) {
+            console.log({_});
             client.send('failure', {eventType: 'listFriends'});
         }
     }
@@ -140,18 +163,73 @@ export class SocialRoomEvents {
         try {
             const requestsIdList = await this.app.friendshipService.getFriendsRequestsIdListOfUser(client.userData._id.toString());
             const userList = await this.app.userService.findUsersByIdList(requestsIdList);
-            client.send('onListFriendshipRequests', {requests: userList});
+            client.send('onListFriendshipRequests', {userNames: userList.map(user => user.userName)});
         } catch (_) {
-            client.send('failure', {eventType: 'listFriends'});
+            client.send('failure', {eventType: 'listFriendshipRequests'});
         }
     }
 
-    protected async inviteFriendToRoom(client: Client, friend_id: string, roomId: string) {
+    protected async listInvitations(client: Client) {
+        try {
+            const invitations = await this.app.invitationService.getInvitationsByInvitedId(client.userData._id.toString());
+            client.send('onListInvitations', {invitations});
+        } catch (_) {
+            client.send('failure', {eventType: 'listInvitations'});
+        }
     }
 
-    protected async invitationAccepted(client: Client, creator_id: string) {
+    protected async inviteFriendToRoom(client: Client, userName: string, room_id: string) {
+        try {
+            const user = await this.app.userService.findByUserName(userName);
+            if (!user) {
+                throw new Error('no_user');
+            }
+            const friend = this.getClients().find(t => t.userData.userName === userName);
+            if (friend === null) {
+                throw new Error('not_online');
+            }
+            const invitation = await this.app.invitationService.invite({
+                inviterId: client.userData._id.toString(),
+                invitedId: friend.userData._id.toString(),
+                roomId: room_id,
+            });
+            if (!invitation) {
+                throw new Error('invitation_not_created');
+            }
+            client.send('onInvitationSent', {userName, room_id});
+            this.emitter.emit('listInvitations', friend);
+        } catch (_) {
+            client.send('failure', {eventType: 'inviteFriendToRoom'});
+        }
     }
 
-    protected async invitationRejected(client: Client, creator_id: string) {
+    protected async acceptInvitation(client: Client, invitation_id: string) {
+        try {
+            const invitation = await this.app.invitationService.getInvitationById(invitation_id);
+            if (!invitation) {
+                throw new Error('no_invitation');
+            }
+            const room_id = await this.app.invitationService.acceptInvite(invitation_id);
+            if (!room_id) {
+                throw new Error('invitation_couldnt_accepted');
+            }
+            client.send('onInvitationAccepted', {room_id});
+            this.emitter.emit('listInvitations', client);
+        } catch (_) {
+            client.send('failure', {eventType: 'acceptInvitation'});
+        }
+    }
+
+    protected async rejectInvitation(client: Client, invitation_id: string) {
+        try {
+            const invitation = await this.app.invitationService.getInvitationById(invitation_id);
+            if (!invitation) {
+                throw new Error('no_invitation');
+            }
+            await this.app.invitationService.deleteInvite({invitationId: invitation_id});
+            this.emitter.emit('listInvitations', client);
+        } catch (_) {
+            client.send('failure', {eventType: 'rejectInvitation'});
+        }
     }
 }

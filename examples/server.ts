@@ -1,11 +1,11 @@
-import express from 'express';
-import {createServer} from 'http';
+import {SocialColyseusApp} from '../index';
+import {PrivateRoom} from './rooms/private.room';
 import {Server} from 'colyseus';
 import {WebSocketTransport} from '@colyseus/ws-transport';
+import express from 'express';
 import * as dotenv from 'dotenv';
-import {SocialColyseusApp} from '../index';
 import cors from 'cors';
-import {PrivateRoom} from './rooms/private.room';
+import { createServer } from 'http';
 
 dotenv.config();
 

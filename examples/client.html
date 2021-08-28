@@ -2,100 +2,427 @@
 <html lang="en">
 <head>
     <title>Client Example</title>
-    <script src="//unpkg.com/jquery.min.js"></script>
+    <link href="//cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="//cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="//cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
     <script src="//unpkg.com/colyseus.js"></script>
 </head>
 <body>
-
-<form id="loginForm" onsubmit="loginFormSubmit(event)">
-    <label>
-        <span>Username</span>
-        <input type="text" id="loginFormUsername" placeholder="userName"/>
-    </label>
-    <label>
-        <span>Password</span>
-        <input type="password" id="loginFormPassword" placeholder="password"/>
-    </label>
-    <button type="submit">
-        Submit
-    </button>
-</form>
-
-<div id="friends-list">
-
-</div>
-
-<div id="create-private-room-holder" style="display: none">
-    <button type="button" id="create-private-room">
-        Create Private Room
-    </button>
-</div>
-
-<script type="application/javascript">
-    const client = new Colyseus.Client('ws://localhost:5567');
-    let authToken;
-    let socialRoom;
-
-    const onLogin = (token) => {
-        authToken = token;
-        client.join('social', {token}).then(room => {
-            socialRoom = room;
-            $('#create-private-room-holder').fadeIn();
-            room.onMessage('friends', (friends) => {
-                $('#friends-list').html(friends.map(friend => `
-                    <div class="friend-item">
-                        <strong>Name</strong>
-                        <span>${friend.userName}</span>
-                        <button type="button" class="invite-friend" style="display: none" data-id="${friend._id}">
-                            Invite
-                        </button>
+<div id="app" class="container py-4" v-cloak>
+    <template v-if="isInitialized">
+        <template v-if="!isLoggedIn">
+            <div class="row mx-0">
+                <div class="col-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">Login</div>
+                        </div>
+                        <div class="card-body">
+                            <form @submit.prevent="loginSubmit()">
+                                <label class="form-group row mx-0">
+                                    <span class="col-md-4">Username</span>
+                                    <input type="text" v-model="loginForm.userName"
+                                           class="form-control form-control-sm col-md-8" name="userName">
+                                </label>
+                                <label class="form-group row mx-0">
+                                    <span class="col-md-4">Password</span>
+                                    <input type="password" v-model="loginForm.password"
+                                           class="form-control form-control-sm col-md-8" name="passWord">
+                                </label>
+                                <div class="form-group row mx-0 mt-2">
+                                    <div class="col-12 px-0">
+                                        <button type="submit" class="btn btn-success">
+                                            Login
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
                     </div>
-                `).join('\n'));
-            });
-            room.onMessage('me', (me) => {
-                console.log({me});
-            });
+                </div>
 
-            room.onMessage('infoMessage', infoMessage => console.info({infoMessage}));
-            room.onMessage('errorMessage', errorMessage => console.error({errorMessage}));
-            room.onMessage('invited', invited => console.log({invited}));
-        });
-    };
+                <div class="col-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">Register</div>
+                        </div>
+                        <div class="card-body">
+                            <form @submit.prevent="registerSubmit()">
+                                <label class="form-group row mx-0">
+                                    <span class="col-md-4">Username</span>
+                                    <input type="text" v-model="registerForm.userName"
+                                           class="form-control form-control-sm col-md-8" name="userName">
+                                </label>
+                                <label class="form-group row mx-0">
+                                    <span class="col-md-4">E-Mail</span>
+                                    <input type="email" v-model="registerForm.email"
+                                           class="form-control form-control-sm col-md-8" name="email">
+                                </label>
+                                <label class="form-group row mx-0">
+                                    <span class="col-md-4">Password</span>
+                                    <input type="password" v-model="registerForm.password"
+                                           class="form-control form-control-sm col-md-8" name="password">
+                                </label>
+                                <div class="form-group row mx-0 mt-2">
+                                    <div class="col-12 px-0">
+                                        <button type="submit" class="btn btn-success">
+                                            Register
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </template>
+        <template v-if="isLoggedIn">
+            <div class="row mx-0">
+                <div class="col-6">
+                    <div class="row mx-0">
+                        <div class="col-12 p-0">
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="card-title">Friends</div>
+                                </div>
+                                <div class="card-body">
+                                    <h2>Online Friends</h2>
+                                    <ul class="list-group">
+                                        <li v-for="friend of onlineFriends">
+                                            <span>{{ friend.userName }}</span>
+                                            <button type="button" class="btn btn-danger"
+                                                    @click="removeFriend(friend.userName)">
+                                                Delete
+                                            </button>
+                                        </li>
+                                    </ul>
+                                    <h2>Offline Friends</h2>
+                                    <ul class="list-group">
+                                        <li v-for="friend of offlineFriends">
+                                            <span>{{ friend.userName }}</span>
+                                            <button type="button" class="btn btn-danger"
+                                                    @click="removeFriend(friend.userName)">
+                                                Delete
+                                            </button>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mx-0" v-if="!battleRoom">
+                        <div class="col-12 p-0">
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="card-title">Create Room</div>
+                                </div>
+                                <div class="card-body">
+                                    <button type="button" class="btn btn-success" @click="createRoomSubmit()">
+                                        Create Room
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mx-0" v-if="!battleRoom">
+                        <div class="col-12 p-0">
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="card-title">Invitations</div>
+                                </div>
+                                <div class="card-body">
+                                    <ul class="list-group">
+                                        <li class="list-group-item" v-for="invitation in invitations">
+                                            <span>{{ invitation.inviterUserName }}</span>
+                                            <button type="button" class="btn btn-success"
+                                                    @click="acceptInvitation(invitation._id)">
+                                                Accept
+                                            </button>
+                                            <button type="button" class="btn btn-danger"
+                                                    @click="rejectInvitation(invitation._id)">
+                                                Reject
+                                            </button>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mx-0" v-if="battleRoom">
+                        <div class="col-12 p-0">
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="card-title">Battle Room</div>
+                                </div>
+                                <div class="card-body">
+                                    <ul class="list-group">
+                                        <li class="list-group-item" v-for="friend in onlineFriends">
+                                            <span>{{ friend.userName }}</span>
+                                            <button type="button" class="btn btn-success"
+                                                    @click="inviteFriend(friend.userName)">
+                                                Invite Friend
+                                            </button>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-    $('#create-private-room').on('click', () => {
-        $('#create-private-room-holder').fadeOut();
-        client.create('privateRoom', {token: authToken}).then(room => {
-            console.log({room});
-            $('.invite-friend').fadeIn().on('click', (event) => {
-                const friendId = $(event.target).data('id');
-                socialRoom.send('inviteFriend', {invitedId: friendId, roomId: room.id});
-            });
-        });
-    });
+                <div class="col-6">
+                    <div class="row mx-0">
+                        <div class="col-12 p-0">
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="card-title">Add Friend</div>
+                                </div>
+                                <div class="card-body">
+                                    <form @submit.prevent="addFriendSubmit">
+                                        <label class="form-group row mx-0">
+                                            <span class="col-md-4">Username</span>
+                                            <input type="text" class="form-control form-control-sm col-md-8"
+                                                   v-model="addFriendForm.userName"/>
+                                        </label>
+                                        <div class="row mx-0">
+                                            <div class="col-12 p-0">
+                                                <button type="submit" class="btn btn-success">
+                                                    Add Friend
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
-    const login = (userName, password) => {
-        return fetch('http://localhost:5567/auth/login', {
-            method: 'POST',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
+                    <div class="row mx-0">
+                        <div class="col-12 p-0">
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="card-title">Friendship Requests</div>
+                                </div>
+                                <div class="card-body">
+                                    <ul class="list-group">
+                                        <li v-for="userName of friendshipRequests">
+                                            <span>{{ userName }}</span>
+                                            <button type="button" class="btn btn-success"
+                                                    @click="approveFriendshipRequest(userName)">
+                                                Accept
+                                            </button>
+                                            <button type="button" class="btn btn-danger"
+                                                    @click="rejectFriendshipRequest(userName)">
+                                                Reject
+                                            </button>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </template>
+    </template>
+</div>
+<script type="application/javascript">
+    const app = new Vue({
+        el: '#app',
+        data: () => ({
+            client: new Colyseus.Client('ws://localhost:5567'),
+            socialRoom: null,
+            battleRoom: null,
+            isLoggedIn: false,
+            isInitialized: false,
+            authToken: JSON.parse(localStorage.getItem('@authToken') ?? null),
+            user: JSON.parse(localStorage.getItem('@user') ?? null),
+            invitations: [],
+            loginForm: {
+                userName: '',
+                password: '',
             },
-            body: JSON.stringify({
-                userName,
-                password,
-            }),
-        }).then(res => res.json()).then(res => {
-            onLogin(res.data.token);
-        });
-    };
+            registerForm: {
+                userName: '',
+                email: '',
+                password: '',
+            },
+            addFriendForm: {
+                userName: '',
+            },
+            friends: [],
+            friendshipRequests: [],
+        }),
+        computed: {
+            onlineFriends() {
+                return this.friends.filter(t => t.isOnline);
+            },
+            offlineFriends() {
+                return this.friends.filter(t => !t.isOnline);
+            },
+        },
+        methods: {
+            loginSubmit() {
+                const {userName, password} = this.loginForm;
+                const vm = this;
+                fetch('//localhost:5567/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({userName, password}),
+                }).then(res => res.json()).then(res => {
+                    const session = res.data;
+                    localStorage.setItem('@authToken', JSON.stringify(session.token));
+                    localStorage.setItem('@user', JSON.stringify(session.user));
+                    vm.user = session.user;
+                    vm.authToken = session.token;
+                    vm.isLoggedIn = true;
+                    this.joinLobby();
+                });
+            },
+            registerSubmit() {
+                const {userName, email, password} = this.registerForm;
+                fetch('//localhost:5567/auth/register', {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({userName, email, password}),
+                }).then(res => res.json()).then(res => console.log({data: res.data}));
+            },
+            createRoomSubmit() {
+                const vm = this;
+                this.client.create('privateRoom', {token: this.authToken}).then(room => {
+                    vm.battleRoom = room;
+                });
+            },
+            addFriendSubmit() {
+                const {userName} = this.addFriendForm;
+                this.socialRoom.send('addFriend', {userName});
+            },
+            joinLobby() {
+                this.client.join('social', {token: this.authToken}).then(room => {
+                    this.socialRoom = room;
+                    this.registerLobbyHandlers();
+                });
+            },
+            registerLobbyHandlers() {
+                this.socialRoom.onMessage('me', this.onMessageMe);
+                this.socialRoom.onMessage('onListFriends', this.onFriends);
+                this.socialRoom.onMessage('onOnlineFriends', this.onOnlineFriends);
+                this.socialRoom.onMessage('onListFriendshipRequests', this.onListFriendshipRequests);
+                this.socialRoom.onMessage('onFriendOnline', this.onFriendOnline);
+                this.socialRoom.onMessage('onFriendOffline', this.onFriendOffline);
+                this.socialRoom.onMessage('onInvitationSent', this.onInvitationSent);
+                this.socialRoom.onMessage('onListInvitations', this.onListInvitations);
+                this.socialRoom.onMessage('onInvitationAccepted', this.onInvitationAccepted);
+                this.socialRoom.onMessage('*', (eventType, payload) => {
+                    console.log({eventType, payload});
+                });
+            },
+            onListInvitations(payload) {
+                console.log({invitations: payload.invitations});
+                this.invitations = payload.invitations;
+            },
+            onInvitationSent() {
+                alert('Invitation sent');
+            },
+            onMessageMe(payload) {
+                this.user = payload;
+                localStorage.setItem('@user', JSON.stringify(payload));
+            },
+            onFriends(payload) {
+                this.friends = payload.friends.map(friend => ({...friend, isOnline: false}));
+                this.socialRoom.send('listOnlineFriends');
+            },
+            onOnlineFriends(payload) {
+                const onlineFriendsIdList = payload.friends.map(user => user._id);
+                this.friends = [...this.friends.map(friend => {
+                    if (onlineFriendsIdList.includes(friend._id)) {
+                        return {...friend, isOnline: true};
+                    }
 
-    const loginFormSubmit = (event) => {
-        event.preventDefault();
-        const userName = $('#loginFormUsername').val();
-        const password = $('#loginFormPassword').val();
-        login(userName, password);
-        $('#loginForm').fadeOut();
-    };
+                    return friend;
+                })];
+            },
+            onListFriendshipRequests(payload) {
+                this.friendshipRequests = payload.userNames;
+            },
+            approveFriendshipRequest(userName) {
+                this.socialRoom.send('approveFriendship', {userName});
+            },
+            rejectFriendshipRequest(userName) {
+                this.socialRoom.send('rejectFriendship', {userName});
+            },
+            removeFriend(userName) {
+                this.socialRoom.send('removeFriend', {userName});
+            },
+            inviteFriend(userName) {
+                this.socialRoom.send('inviteFriendToRoom', {userName, room_id: this.battleRoom.id});
+            },
+            acceptInvitation(invitation_id) {
+                this.socialRoom.send('acceptInvitation', {invitation_id});
+            },
+            rejectInvitation(invitation_id) {
+                this.socialRoom.send('rejectInvitation', {invitation_id});
+            },
+            onFriendOnline(payload) {
+                this.friends = [
+                    ...this.friends.map(friend => {
+                        if (friend.userName === payload.userName) {
+                            return {...friend, isOnline: true};
+                        }
+                        return friend;
+                    }),
+                ];
+            },
+            onInvitationAccepted(payload) {
+                this.client.joinById(payload.room_id, {token: this.authToken}).then(room => {
+                    this.battleRoom = room;
+                });
+            },
+            onFriendOffline(payload) {
+                this.friends = [
+                    ...this.friends.map(friend => {
+                        if (friend.userName === payload.userName) {
+                            return {...friend, isOnline: false};
+                        }
+                        return friend;
+                    }),
+                ];
+            },
+        },
+        mounted() {
+            if (this.authToken && this.user) {
+                fetch('//localhost:5567/user/me', {
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${this.authToken}`,
+                    },
+                }).then(() => {
+                    this.isLoggedIn = true;
+                    this.joinLobby();
+                }).catch(() => {
+                    this.isLoggedIn = false;
+                    this.authToken = null;
+                    this.user = null;
+                    localStorage.removeItem('@authToken');
+                    localStorage.removeItem('@user');
+                }).finally(() => this.isInitialized = true);
+            } else {
+                this.isLoggedIn = false;
+                this.authToken = null;
+                this.user = null;
+                localStorage.removeItem('@authToken');
+                localStorage.removeItem('@user');
+                this.isInitialized = true;
+            }
+        },
+    });
 </script>
 </body>
 </html>

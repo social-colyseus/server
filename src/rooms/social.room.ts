@@ -21,24 +21,24 @@ export class SocialRoom extends Room {
         this.events.getClients = () => this.clients;
 
         this.onMessage('getMe', (client) => this.events.emitter.emit('getMe', client));
-        this.onMessage('addFriend', (client, message) => this.events.emitter.emit('addFriend', client, message.friend_id));
-        this.onMessage('approveFriendship', (client, message) => this.events.emitter.emit('approveFriendship', client, message.friend_id));
-        this.onMessage('rejectFriendship', (client, message) => this.events.emitter.emit('rejectFriendship', client, message.friend_id));
-        this.onMessage('removeFriend', (client, message) => this.events.emitter.emit('removeFriend', client, message.friend_id));
+        this.onMessage('addFriend', (client, message) => this.events.emitter.emit('addFriend', client, message.userName));
+        this.onMessage('approveFriendship', (client, message) => this.events.emitter.emit('approveFriendship', client, message.userName));
+        this.onMessage('rejectFriendship', (client, message) => this.events.emitter.emit('rejectFriendship', client, message.userName));
+        this.onMessage('removeFriend', (client, message) => this.events.emitter.emit('removeFriend', client, message.userName));
         this.onMessage('listFriends', (client) => this.events.emitter.emit('listFriends', client));
         this.onMessage('listOnlineFriends', (client) => this.events.emitter.emit('listOnlineFriends', client));
-        this.onMessage('inviteFriendToRoom', (client, message) => this.events.emitter.emit('inviteFriendToRoom', client, message.friend_id, message.room_id));
+        this.onMessage('inviteFriendToRoom', (client, message) => this.events.emitter.emit('inviteFriendToRoom', client, message.userName, message.room_id));
         this.onMessage('acceptInvitation', (client, message) => this.events.emitter.emit('acceptInvitation', client, message.invitation_id));
         this.onMessage('rejectInvitation', (client, message) => this.events.emitter.emit('rejectInvitation', client, message.invitation_id));
 
     }
 
     onJoin(client: Client, options?: any, auth?: any): void | Promise<any> {
-        this.events.emitter.emit('onPlayerJoin', [client]);
+        this.events.emitter.emit('onPlayerJoin', client);
     }
 
     onLeave(client: Client, consented?: boolean): void | Promise<any> {
-        this.events.emitter.emit('onPlayerLeave', [client]);
+        this.events.emitter.emit('onPlayerLeave', client);
     }
 
     async onAuth(client: Client, options: { token: string }): Promise<User> {
@@ -46,7 +46,8 @@ export class SocialRoom extends Room {
         client.userData = user;
         await this.events.emitter.emit('getMe', client);
         await this.events.emitter.emit('listFriends', client);
-        await this.events.emitter.emit('listOnlineFriends', client);
+        await this.events.emitter.emit('listFriendshipRequests', client);
+        await this.events.emitter.emit('listInvitations', client);
         return user;
     }
 }

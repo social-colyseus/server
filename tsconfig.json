@@ -2,7 +2,7 @@
   "compilerOptions": {
     "outDir": "dist",
     "outFile": "dist/index.js",
-    "module": "amd",
+    "module": "commonjs",
     "lib": [
       "es6"
     ],
@@ -12,8 +12,7 @@
     "experimentalDecorators": true,
     "sourceMap": true,
     "esModuleInterop": true,
-    "moduleResolution": "node",
-    "baseUrl": "."
+    "moduleResolution": "node"
   },
   "exclude": [
     "node_modules",
