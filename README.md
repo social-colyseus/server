@@ -98,6 +98,12 @@ gameServer.listen(5567, '0.0.0.0').finally();
 ## Roadmap
 
 - [ ] Room Invitation
+  - [X] Create invitation
+  - [X] Accept invitation
+  - [X] Reject invitation
+  - [ ] Only host invites
+  - [ ] No re-invite friends
+  - [ ] Remove player from invitation list if user is in target room
 - [ ] Leaderboard
 - [ ] Clans
 - [ ] Parties
