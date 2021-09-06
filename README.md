@@ -95,6 +95,10 @@ export class PrivateRoom extends Room {
 gameServer.listen(5567, '0.0.0.0').finally();
 ```
 
+## Example Repository
+
+### [Click here for example repository](https://github.com/social-colyseus/server-example)
+
 ## Roadmap
 
 - [ ] Room Invitation
