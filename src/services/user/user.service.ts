@@ -41,6 +41,12 @@ export class UserService {
         return users.map(user => ({...user.toObject(), password: undefined}));
     }
 
+    public async findUsersByUserNameList(list: string[]) {
+        const users = await this.model.find({userName: {$in: list}});
+
+        return users.map(user => ({...user.toObject(), password: undefined}));
+    }
+
     public async createUser(model: UserCreateModel) {
         const salt = await bcrypt.genSalt(10);
         model.password = await bcrypt.hash(model.password, salt);

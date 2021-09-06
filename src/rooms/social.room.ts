@@ -30,6 +30,8 @@ export class SocialRoom extends Room {
         this.onMessage('inviteFriendToRoom', (client, message) => this.events.emitter.emit('inviteFriendToRoom', client, message.userName, message.room_id));
         this.onMessage('acceptInvitation', (client, message) => this.events.emitter.emit('acceptInvitation', client, message.invitation_id));
         this.onMessage('rejectInvitation', (client, message) => this.events.emitter.emit('rejectInvitation', client, message.invitation_id));
+        this.onMessage('listChatRooms', (client) => this.events.emitter.emit('listChatRooms', client));
+        this.onMessage('createChatRoom', (client, message) => this.events.emitter.emit('createChatRoom', client, message.target));
 
     }
 
@@ -48,6 +50,7 @@ export class SocialRoom extends Room {
         await this.events.emitter.emit('listFriends', client);
         await this.events.emitter.emit('listFriendshipRequests', client);
         await this.events.emitter.emit('listInvitations', client);
+        await this.events.emitter.emit('listChatRooms', client);
         return user;
     }
 }

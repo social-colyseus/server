@@ -94,6 +94,10 @@
                                                     @click="removeFriend(friend.userName)">
                                                 Delete
                                             </button>
+                                            <button type="button" class="btn btn-primary"
+                                                    @click="createChat(friend.userName)">
+                                                Chat
+                                            </button>
                                         </li>
                                     </ul>
                                     <h2>Offline Friends</h2>
@@ -223,10 +227,79 @@
                     </div>
                 </div>
             </div>
+            <div class="row mx-0 mt-4" v-for="room in chatRooms">
+                <div class="col-12">
+                    <v-chat-room :client="client" :room-id="room.roomId" :participants="room.participants"
+                                 :auth-token="authToken">
+                    </v-chat-room>
+                </div>
+            </div>
         </template>
     </template>
 </div>
-<script type="application/javascript">
+
+<script type="text/x-template" id="chat-room-component">
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title">Chat: [{{ participants.join(', ') }}]</div>
+            <div class="card-body">
+                <div class="list-group list-group-flush w-100" ref="chatArea"
+                     style="height: 300px; overflow-y: scroll;">
+                    <div class="list-group-item" v-for="message of messages">
+                        <span class="fw-bolder">{{ message.sender }}</span>
+                        <p>{{ message.message }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <form @submit.prevent="sendMessage()">
+                    <div class="input-group w-100">
+                        <div class="input-group-prepend input-group-text">
+                            <label :for="'message-'+roomId">Message</label>
+                        </div>
+                        <input class="form-control form-control-sm" :id="'message-'+roomId" aria-label="Message"
+                               v-model="message">
+                        <button type="submit" class="btn btn-success input-group-append">Send</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</script>
+
+<script type="application/javascript" defer>
+
+    Vue.component('v-chat-room', {
+        template: '#chat-room-component',
+        props: {
+            roomId: String,
+            participants: Array,
+            authToken: String,
+        },
+        data: () => ({
+            room: null,
+            message: '',
+            messages: [],
+            client: new Colyseus.Client('ws://localhost:5567'),
+        }),
+        methods: {
+            sendMessage() {
+                this.room.send('sendMessage', {message: this.message});
+                this.message = '';
+            },
+            onChatMessage(payload) {
+                this.messages = [...this.messages, payload];
+                setTimeout(() => this.$refs.chatArea.scrollTop = this.$refs.chatArea.scrollHeight, 100);
+            },
+        },
+        mounted() {
+            this.client.joinById(this.roomId, {token: this.authToken}).then(room => {
+                this.room = room;
+                this.room.onMessage('onChatMessage', this.onChatMessage);
+            }).catch(err => console.log({err}));
+        },
+    });
+
     const app = new Vue({
         el: '#app',
         data: () => ({
@@ -252,6 +325,7 @@
             },
             friends: [],
             friendshipRequests: [],
+            chatRooms: [],
         }),
         computed: {
             onlineFriends() {
@@ -319,6 +393,8 @@
                 this.socialRoom.onMessage('onInvitationSent', this.onInvitationSent);
                 this.socialRoom.onMessage('onListInvitations', this.onListInvitations);
                 this.socialRoom.onMessage('onInvitationAccepted', this.onInvitationAccepted);
+                this.socialRoom.onMessage('onChatRoom', this.onChatRoom);
+                this.socialRoom.onMessage('onListChatRooms', this.onListChatRooms);
                 this.socialRoom.onMessage('*', (eventType, payload) => {
                     console.log({eventType, payload});
                 });
@@ -393,6 +469,15 @@
                         return friend;
                     }),
                 ];
+            },
+            createChat(friend) {
+                this.socialRoom.send('createChatRoom', {target: friend});
+            },
+            onListChatRooms(payload) {
+                this.chatRooms = payload.rooms;
+            },
+            onChatRoom(room) {
+                this.chatRooms = [...this.chatRooms, room];
             },
         },
         mounted() {

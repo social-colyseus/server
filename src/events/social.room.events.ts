@@ -30,6 +30,9 @@ export class SocialRoomEvents {
         this.emitter.addListener('inviteFriendToRoom', (client: Client, userName: string, room_id: string) => this.inviteFriendToRoom(client, userName, room_id));
         this.emitter.addListener('acceptInvitation', (client: Client, invitation_id: string) => this.acceptInvitation(client, invitation_id));
         this.emitter.addListener('rejectInvitation', (client: Client, invitation_id: string) => this.rejectInvitation(client, invitation_id));
+
+        this.emitter.addListener('listChatRooms', (client: Client) => this.listChatRooms(client));
+        this.emitter.addListener('createChatRoom', (client: Client, target: string) => this.createChatRoom(client, target));
     }
 
     protected async getMe(client: Client) {
@@ -230,6 +233,35 @@ export class SocialRoomEvents {
             this.emitter.emit('listInvitations', client);
         } catch (_) {
             client.send('failure', {eventType: 'rejectInvitation'});
+        }
+    }
+
+    protected async listChatRooms(client: Client) {
+        try {
+            const rooms = await this.app.chatRoomService.findRoomsByUserName(client.userData.userName);
+            client.send('onListChatRooms', {
+                rooms: rooms.map(room => ({
+                    roomId: room.roomId,
+                    participants: room.participants,
+                })),
+            });
+        } catch (_) {
+            client.send('failure', {eventType: 'listChatRooms'});
+        }
+    }
+
+    protected async createChatRoom(client: Client, target: string) {
+        try {
+            const friend = this.getClients().find(t => t.userData.userName === target);
+            if (!friend) {
+                throw new Error('user_not_online');
+            }
+            const participants = [client.userData.userName, target];
+            const room = await this.app.chatRoomService.findRoom(participants);
+            client.send('onChatRoom', {roomId: room, participants});
+            friend.send('onChatRoom', {roomId: room, participants});
+        } catch (_) {
+            client.send('failure', {eventType: 'createChatRoom'});
         }
     }
 }

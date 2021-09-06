@@ -9,6 +9,8 @@ import {AuthService} from './services/auth/auth.service';
 import {FriendshipService} from './services/friendship/friendship.service';
 import {Type} from '@colyseus/core/build/types';
 import {InvitationService} from './services/invitation/invitation.service';
+import {ChatRoomService} from './services/chat-room/chat-room.service';
+import {ChatRoom} from './rooms/chat.room';
 
 export interface DatabaseOptions {
     host: string;
@@ -27,6 +29,7 @@ export class SocialColyseusApp {
     public authService: AuthService;
     public friendshipService: FriendshipService;
     public invitationService: InvitationService;
+    public chatRoomService: ChatRoomService;
 
     protected db: Mongoose;
 
@@ -38,6 +41,7 @@ export class SocialColyseusApp {
             this.db = database;
             this.prepareServices();
             this.server.define('social', SocialRoom);
+            this.server.define('chatRoom', ChatRoom, {app: this, participants: []});
             matchMaker.createRoom('social', {
                 secret: process.env.APP_SECRET,
                 app: this,
@@ -77,5 +81,6 @@ export class SocialColyseusApp {
         this.authService = new AuthService(this.db);
         this.friendshipService = new FriendshipService(this.db);
         this.invitationService = new InvitationService(this.db);
+        this.chatRoomService = new ChatRoomService(this.db, this.userService);
     }
 }
