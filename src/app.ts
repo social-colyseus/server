@@ -55,8 +55,8 @@ export class SocialColyseusApp {
         });
     }
 
-    public httpHandler() {
-        return HttpHandler(this);
+    public httpHandler(optionalGuestPaths?: string[]) {
+        return HttpHandler(this, optionalGuestPaths);
     }
 
     protected connectDatabase() {

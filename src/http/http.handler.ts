@@ -5,7 +5,7 @@ import jwt from 'express-jwt';
 import UserModule from '../services/user/module/user.module';
 import bodyParser from 'body-parser';
 
-export const HttpHandler = (app: SocialColyseusApp) => {
+export const HttpHandler = (app: SocialColyseusApp, optionalGuestPaths?: string[]) => {
     const routes = express.Router();
     routes.use(bodyParser.json());
     routes.use(
@@ -16,7 +16,7 @@ export const HttpHandler = (app: SocialColyseusApp) => {
                 let bearerToken = req.header('Authorization')?.replace('Bearer ', '');
                 return req.query.token || bearerToken;
             },
-        }).unless({path: ['/auth/login', '/auth/register']}),
+        }).unless({path: ['/auth/login', '/auth/register', ...optionalGuestPaths]}),
     );
     routes.use('/auth', AuthModule(app));
     routes.use('/user', UserModule(app));
