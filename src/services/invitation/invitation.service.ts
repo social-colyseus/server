@@ -2,11 +2,12 @@ import {Model, Mongoose} from 'mongoose';
 import invitationSchema, {Invitation} from './schema/invitation.schema';
 import {CreateInvitationModel} from './models/create.invitation.model';
 import {DeleteInvitationModel} from './models/delete.invitation.model';
+import {UserService} from '../user/user.service';
 
 export class InvitationService {
     protected model: Model<Invitation>;
 
-    constructor(protected db: Mongoose) {
+    constructor(protected db: Mongoose, protected userService: UserService) {
         this.model = this.db.model<Invitation>('Invitation', invitationSchema);
     }
 
@@ -40,7 +41,15 @@ export class InvitationService {
         const now = new Date();
         const expiresAt = new Date(now.setMinutes(now.getMinutes() + (+process.env.INVITATION_LENGTH)));
 
-        return this.model.create({...model, expiresAt});
+        const inviter = await this.userService.findUserById(model.inviterId);
+        const invited = await this.userService.findUserById(model.invitedId);
+
+        return this.model.create({
+            ...model,
+            expiresAt,
+            inviterUserName: inviter.userName,
+            invitedUserName: invited.userName,
+        });
     }
 
     public async deleteInvite(model: DeleteInvitationModel) {

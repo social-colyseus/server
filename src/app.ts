@@ -80,7 +80,7 @@ export class SocialColyseusApp {
         this.userService = new UserService(this.db);
         this.authService = new AuthService(this.db);
         this.friendshipService = new FriendshipService(this.db);
-        this.invitationService = new InvitationService(this.db);
+        this.invitationService = new InvitationService(this.db, this.userService);
         this.chatRoomService = new ChatRoomService(this.db, this.userService);
     }
 }
